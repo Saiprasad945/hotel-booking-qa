@@ -39,7 +39,7 @@ _(Instructions added as each sprint is completed.)_
 ## Progress
 
 - [x] Sprint 1 — Requirements & user stories
-- [ ] Sprint 2 — Manual test cases & RTM
+- [x] Sprint 2 — Manual test cases & RTM
 - [ ] Sprint 3 — Postman API tests
 - [ ] Sprint 4 — MySQL & SQL validation
 - [ ] Sprint 5 — API automation (Python + Pytest)
