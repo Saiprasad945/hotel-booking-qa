@@ -1,0 +1,23 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# --- Secrets / config (never commit credentials) ---
+.env
+config/secrets.ini
+config/local_settings.py
+
+# --- Test output (regenerated every run, no need to track) ---
+reports/
+logs/
+screenshots/
+.pytest_cache/
+*.log
+
+# --- OS / editor noise ---
+.DS_Store
+.idea/
+.vscode/
