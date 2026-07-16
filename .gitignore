@@ -17,6 +17,9 @@ screenshots/
 .pytest_cache/
 *.log
 
+# --- Generated database (rebuilt by build_db.py) ---
+*.db
+
 # --- OS / editor noise ---
 .DS_Store
 .idea/
