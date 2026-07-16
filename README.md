@@ -40,7 +40,7 @@ _(Instructions added as each sprint is completed.)_
 
 - [x] Sprint 1 — Requirements & user stories
 - [x] Sprint 2 — Manual test cases & RTM
-- [ ] Sprint 3 — Postman API tests
+- [x] Sprint 3 — Postman API tests
 - [ ] Sprint 4 — MySQL & SQL validation
 - [ ] Sprint 5 — API automation (Python + Pytest)
 - [ ] Sprint 6 — UI automation (Selenium + POM)

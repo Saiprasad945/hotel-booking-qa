@@ -1,0 +1,417 @@
+{
+  "info": {
+    "name": "Hotel Booking API - Restful Booker Platform",
+    "_postman_id": "hotel-booking-qa-collection",
+    "description": "API tests for the Restful Booker Platform (https://automationintesting.online). Covers Auth, Rooms, Booking, Message and Branding with positive, negative and auth-protected tests. Environment variables drive base URL and credentials; token, roomid and bookingid are captured at runtime.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST Login - valid (TC-081)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response has a token', () => pm.expect(body.token).to.be.a('string').and.not.empty);",
+                  "pm.environment.set('token', body.token);",
+                  "pm.test('Response time < 2000ms', () => pm.expect(pm.response.responseTime).to.be.below(2000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "POST Login - invalid creds (TC-082)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Invalid login is rejected (401/403)', () => pm.expect([401,403]).to.include(pm.response.code));",
+                  "pm.test('No token returned', () => {",
+                  "  let body = {};",
+                  "  try { body = pm.response.json(); } catch (e) {}",
+                  "  pm.expect(body.token).to.be.undefined;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"wrongpassword\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rooms",
+      "item": [
+        {
+          "name": "GET all rooms (TC-084)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('rooms is an array', () => pm.expect(body.rooms).to.be.an('array'));",
+                  "pm.test('At least one room exists', () => pm.expect(body.rooms.length).to.be.above(0));",
+                  "if (body.rooms.length) {",
+                  "  pm.environment.set('roomid', body.rooms[0].roomid);",
+                  "  pm.test('Room has expected fields', () => {",
+                  "    const r = body.rooms[0];",
+                  "    pm.expect(r).to.have.property('roomName');",
+                  "    pm.expect(r).to.have.property('type');",
+                  "    pm.expect(r).to.have.property('roomPrice');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/room", "host": ["{{baseUrl}}"], "path": ["api", "room"] }
+          }
+        },
+        {
+          "name": "GET room by id (TC-085)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Returned room id matches requested', () => pm.expect(Number(body.roomid)).to.eql(Number(pm.environment.get('roomid'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/room/{{roomid}}", "host": ["{{baseUrl}}"], "path": ["api", "room", "{{roomid}}"] }
+          }
+        },
+        {
+          "name": "GET room - invalid id (TC-086)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Nonexistent room returns 404/500', () => pm.expect([404,500]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/room/999999", "host": ["{{baseUrl}}"], "path": ["api", "room", "999999"] }
+          }
+        },
+        {
+          "name": "POST create room - auth (TC-087)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Create room succeeds (200/201)', () => pm.expect([200,201]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "token={{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomName\": \"777\",\n  \"type\": \"Double\",\n  \"accessible\": true,\n  \"description\": \"QA project test room\",\n  \"image\": \"https://www.mwtestconsultancy.co.uk/img/testim/room2.jpg\",\n  \"roomPrice\": 150,\n  \"features\": [\"WiFi\", \"TV\", \"Safe\"]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/room", "host": ["{{baseUrl}}"], "path": ["api", "room"] }
+          }
+        },
+        {
+          "name": "POST create room - missing field (TC-088)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Invalid room rejected (400)', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "token={{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"Double\",\n  \"accessible\": true,\n  \"roomPrice\": 150\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/room", "host": ["{{baseUrl}}"], "path": ["api", "room"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Booking",
+      "item": [
+        {
+          "name": "POST booking - valid (TC-093)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Booking created (200/201)', () => pm.expect([200,201]).to.include(pm.response.code));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response has bookingid', () => pm.expect(body.bookingid).to.exist);",
+                  "if (body.bookingid) pm.environment.set('bookingid', body.bookingid);",
+                  "pm.test('Firstname echoed back', () => pm.expect(body.firstname).to.eql('Sai'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomid\": {{roomid}},\n  \"firstname\": \"Sai\",\n  \"lastname\": \"Tester\",\n  \"depositpaid\": true,\n  \"email\": \"sai@example.com\",\n  \"phone\": \"01234567890\",\n  \"bookingdates\": {\n    \"checkin\": \"2027-03-01\",\n    \"checkout\": \"2027-03-05\"\n  }\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/booking", "host": ["{{baseUrl}}"], "path": ["api", "booking"] }
+          }
+        },
+        {
+          "name": "POST booking - checkout before checkin (TC-094)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Bad dates rejected (400/409/500)', () => pm.expect([400,409,500]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomid\": {{roomid}},\n  \"firstname\": \"Sai\",\n  \"lastname\": \"Tester\",\n  \"depositpaid\": true,\n  \"email\": \"sai@example.com\",\n  \"phone\": \"01234567890\",\n  \"bookingdates\": {\n    \"checkin\": \"2027-03-10\",\n    \"checkout\": \"2027-03-05\"\n  }\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/booking", "host": ["{{baseUrl}}"], "path": ["api", "booking"] }
+          }
+        },
+        {
+          "name": "POST booking - missing firstname (TC-095)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Missing required field rejected (400)', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomid\": {{roomid}},\n  \"lastname\": \"Tester\",\n  \"depositpaid\": true,\n  \"email\": \"sai@example.com\",\n  \"phone\": \"01234567890\",\n  \"bookingdates\": {\n    \"checkin\": \"2027-04-01\",\n    \"checkout\": \"2027-04-03\"\n  }\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/booking", "host": ["{{baseUrl}}"], "path": ["api", "booking"] }
+          }
+        },
+        {
+          "name": "GET booking by id - auth (TC-097)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Booking has firstname', () => pm.expect(body).to.have.property('firstname'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/booking/{{bookingid}}", "host": ["{{baseUrl}}"], "path": ["api", "booking", "{{bookingid}}"] }
+          }
+        },
+        {
+          "name": "DELETE booking - no auth (TC-083 negative)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Delete without token is blocked (401/403)', () => pm.expect([401,403]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/booking/{{bookingid}}", "host": ["{{baseUrl}}"], "path": ["api", "booking", "{{bookingid}}"] }
+          }
+        },
+        {
+          "name": "DELETE booking - auth (TC-099)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Delete succeeds (200/201/202)', () => pm.expect([200,201,202]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/booking/{{bookingid}}", "host": ["{{baseUrl}}"], "path": ["api", "booking", "{{bookingid}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Message",
+      "item": [
+        {
+          "name": "POST message - valid (TC-100)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200/201', () => pm.expect([200,201]).to.include(pm.response.code));",
+                  "const body = pm.response.json();",
+                  "pm.test('success is true', () => pm.expect(body.success).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sai Test\",\n  \"email\": \"sai@example.com\",\n  \"phone\": \"01234567890\",\n  \"subject\": \"API enquiry test\",\n  \"description\": \"This is a QA automation test message body over twenty characters.\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/message", "host": ["{{baseUrl}}"], "path": ["api", "message"] }
+          }
+        },
+        {
+          "name": "POST message - invalid email (TC-101)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Invalid email rejected (400)', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sai Test\",\n  \"email\": \"not-an-email\",\n  \"phone\": \"01234567890\",\n  \"subject\": \"API enquiry test\",\n  \"description\": \"This is a QA automation test message body over twenty characters.\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/message", "host": ["{{baseUrl}}"], "path": ["api", "message"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Branding",
+      "item": [
+        {
+          "name": "GET branding (TC-105)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Branding has name & contact', () => {",
+                  "  pm.expect(body).to.have.property('name');",
+                  "  pm.expect(body).to.have.property('contact');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/branding", "host": ["{{baseUrl}}"], "path": ["api", "branding"] }
+          }
+        }
+      ]
+    }
+  ]
+}
