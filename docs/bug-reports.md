@@ -66,14 +66,50 @@ genuine availability conflicts.
 
 ---
 
+## BUG-03 — Server hangs on booking with missing `bookingdates`
+
+| Field | Value |
+|-------|-------|
+| **ID** | BUG-03 |
+| **Module** | Booking API |
+| **Severity** | Critical |
+| **Priority** | P1 |
+| **Status** | OPEN |
+| **Environment** | https://automationintesting.online (live API) |
+| **Found by** | Pytest API automation (Sprint 5) |
+| **Related TC** | TC-095 (variant) |
+
+**Steps to reproduce**
+1. `POST /api/booking` with a valid `roomid`, name, email, phone but **omitting
+   the `bookingdates` object entirely**.
+2. Observe the response.
+
+**Expected:** `400 Bad Request` (a required object is missing) returned promptly.
+
+**Actual:** The server does **not respond at all** — the connection hangs and the
+client times out (reproduced twice at 25s, `HTTP 000`).
+
+**Impact:** Critical. A single malformed request holds a connection open
+indefinitely. At scale this could exhaust server connections (availability /
+denial-of-service risk) and it blocks any client that doesn't set its own timeout.
+
+**Recommendation:** Validate the presence of `bookingdates` before processing and
+return `400` immediately. Add a server-side request timeout.
+
+**Note:** Documented in the automated suite as an `xfail` test
+(`test_booking_missing_dates_should_return_400`) so the defect is tracked in code
+until fixed.
+
+---
+
 ## Bug metrics (running)
 
 | Severity | Count |
 |----------|------:|
 | Blocker | 0 |
-| Critical | 0 |
+| Critical | 1 |
 | Major | 1 |
 | Minor | 1 |
-| **Total** | **2** |
+| **Total** | **3** |
 
 _More defects to be added during UI automation (Sprint 6)._
