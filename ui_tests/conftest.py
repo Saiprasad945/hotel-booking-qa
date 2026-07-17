@@ -4,8 +4,6 @@ import os
 import pytest
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 
 from ui_tests.config import ui_config
 
@@ -23,9 +21,8 @@ def driver():
     opts.add_argument(f"--window-size={ui_config.WINDOW[0]},{ui_config.WINDOW[1]}")
     opts.add_argument("--no-sandbox")
     opts.add_argument("--disable-dev-shm-usage")
-    driver = webdriver.Chrome(
-        service=Service(ChromeDriverManager().install()), options=opts
-    )
+    # Selenium Manager auto-resolves a matching ChromeDriver (reliable in CI).
+    driver = webdriver.Chrome(options=opts)
     driver.implicitly_wait(2)
     yield driver
     driver.quit()

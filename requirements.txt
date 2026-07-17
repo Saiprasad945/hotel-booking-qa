@@ -5,9 +5,8 @@ requests==2.32.3
 pytest==8.3.3
 pytest-html==4.1.1
 
-# --- UI automation (Sprint 6) ---
+# --- UI automation (Sprint 6) — Selenium Manager auto-resolves the driver ---
 selenium==4.25.0
-webdriver-manager==4.0.2
 
 # --- Config / env handling ---
 python-dotenv==1.0.1
