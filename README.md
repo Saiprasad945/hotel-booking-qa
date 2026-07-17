@@ -1,6 +1,6 @@
 # 🏨 Hotel Booking — End-to-End QA Project
 
-[![QA CI](https://github.com/YOUR_USERNAME/hotel-booking-qa/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/hotel-booking-qa/actions/workflows/ci.yml)
+[![QA CI](https://github.com/Saiprasad945/hotel-booking-qa/actions/workflows/ci.yml/badge.svg)](https://github.com/Saiprasad945/hotel-booking-qa/actions/workflows/ci.yml)
 
 A complete quality-assurance project for a hotel booking application, spanning
 **manual testing, API testing, SQL data validation, API automation, UI automation,
