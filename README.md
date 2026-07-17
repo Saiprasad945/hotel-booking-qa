@@ -43,5 +43,5 @@ _(Instructions added as each sprint is completed.)_
 - [x] Sprint 3 — Postman API tests
 - [x] Sprint 4 — SQL validation (SQLite; MySQL-compatible)
 - [x] Sprint 5 — API automation (Python + Pytest)
-- [ ] Sprint 6 — UI automation (Selenium + POM)
+- [x] Sprint 6 — UI automation (Selenium + POM)
 - [ ] Sprint 7 — Documentation & GitHub polish
