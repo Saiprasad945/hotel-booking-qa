@@ -1,0 +1,94 @@
+name: QA CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:      # allow manual runs from the Actions tab
+
+jobs:
+  api-and-db:
+    name: API automation + SQL validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run API automation (Pytest)
+        run: pytest -m "not ui" --html=reports/pytest-report.html --self-contained-html
+
+      - name: Build & validate database (SQL)
+        run: |
+          python db_validation/build_db.py
+          python db_validation/validate.py
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-report
+          path: reports/pytest-report.html
+
+  postman:
+    name: Postman API tests (Newman)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Newman
+        run: npm install -g newman newman-reporter-htmlextra
+
+      - name: Run Postman collection
+        run: |
+          mkdir -p reports
+          newman run postman/HotelBooking.postman_collection.json \
+            -e postman/HotelBooking.postman_environment.json \
+            -r cli,htmlextra \
+            --reporter-htmlextra-export reports/newman-report.html
+
+      - name: Upload Newman report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: newman-report
+          path: reports/newman-report.html
+
+  ui:
+    name: Selenium UI tests (Chrome, headless)
+    runs-on: ubuntu-latest
+    # UI runs against a shared public site; don't fail the whole pipeline on
+    # external flakiness, but still surface the result.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Set up Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run UI tests (headless)
+        env:
+          HEADLESS: "true"
+        run: pytest -m ui
